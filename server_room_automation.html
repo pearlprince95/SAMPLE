@@ -1,0 +1,148 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>SERVER_ROOM_AUTOMATION</title>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        body {
+            
+			background-size:950px;
+			
+		
+        }
+    </style>
+</head>
+
+<body background="server_room.jpg">
+<div id="main">
+    <div class="container"></br>
+	<center><h1>SERVER_ROOM_AUTOMATION</h1></center>
+            
+        <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">PARAMETERS</h3>
+                    </div>
+                    <div class="panel-body">
+                        <span>TEMPERATURE:</span> <span id="payload"> </span>
+						<label id="tstat">Waiting..</label>
+                        
+                        <br>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">HVAC</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="sw1">
+                            <span>FAN</span>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success" id="s1on">On</button>
+                                <button type="button" class="btn btn-danger" id="s1off">Off</button>
+                            </div>
+                        </div>
+                        <br>
+                        <div id="sw2">
+                            <span>CONTROL</span>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success" id="s2on">On</button>
+                                <button type="button" class="btn btn-danger" id="s2off">Off</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+	</div>
+</body>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="js/mqttws31.js"></script>
+
+<script>
+    // Create a client instance: Broker, Port, Websocket Path, Client ID
+    client = new Paho.MQTT.Client("192.168.1.4", Number(9001), "/ws", "clientId-ai2");
+
+    // set callback handlers
+    client.onConnectionLost = function (responseObject) {
+        console.log("Connection Lost: " + responseObject.errorMessage);
+    }
+
+    client.onMessageArrived = function (message) {
+        console.log("Message Arrived: " + message.payloadString);
+        document.getElementById("payload").innerHTML =message.payloadString;
+		var t=payload;
+		
+		if (t > 36) {
+            $("#tstat").html("<label class='label label-danger'>CRITICAL</label>");
+        } else
+            $("#tstat").html("<label class='label label-success'>NORMAL</label>");
+
+
+        
+
+    }
+      $(document).ready(function () {
+        $("#s1on").click(function () {
+            message = new Paho.MQTT.Message("a");
+            message.destinationName = "fan";
+            client.send(message);
+        });
+        $("#s1off").click(function () {
+             message = new Paho.MQTT.Message("b");
+            message.destinationName = "fan";
+            client.send(message);
+        });
+		
+		 $("#s2on").click(function () {
+            message = new Paho.MQTT.Message("0");
+            message.destinationName = "fan";
+            client.send(message);
+        });
+        $("#s2off").click(function () {
+             message = new Paho.MQTT.Message("1");
+            message.destinationName = "fan";
+            client.send(message);
+        });
+
+    });
+
+    function onConnect() {
+        console.log("Connected!");
+        client.subscribe("temp");
+
+    }
+
+
+    client.connect({
+        onSuccess: onConnect
+    });
+</script>
+
+
+</html>
